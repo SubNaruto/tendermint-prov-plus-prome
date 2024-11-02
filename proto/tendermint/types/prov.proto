@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package tendermint.types;
+
+option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
+
+enum OperationType{
+  INSERT = 0;
+  DELETE = 1;
+  UPDATE = 2;
+  SELECT = 3;
+}
+
+message TxBody{
+  OperationType op_type = 1;
+  string timestamp = 2;
+  string user_id = 3;
+  string entity_id = 4;
+  uint32 version = 5;
+}
+
+message Tx{
+  string key = 1;
+  TxBody tx_body = 2;
+}
+
+message VONode{
+  int64 index = 1;
+  repeated bytes hashes = 2;
+}
+
+message VO{
+  repeated VONode v_o_nodes = 1;
+}
+
+message Prov{
+  Tx tx = 1;
+  VO v_o = 2;
+  bytes m_b_tree_root = 3;
+  int64 height = 4;
+}
+
+message ProvDataList{
+  repeated Prov prov_data_list = 1;
+}

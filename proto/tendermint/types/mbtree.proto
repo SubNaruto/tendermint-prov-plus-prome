@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package tendermint.types;
+
+option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
+
+message Transaction{
+  bytes key = 1;
+  bytes value = 2;
+}
+
+message Node{
+  Node parent_node = 1;
+  repeated Transaction transactions = 2;
+  repeated bytes hashes = 3;
+  repeated Node child_nodes = 4;
+  bytes hash = 5;
+  Node next_leaf_node = 6;
+}
