@@ -1214,6 +1214,7 @@ func (n *Node) startRPC() ([]net.Listener, error) {
 // startPrometheusServer starts a Prometheus HTTP server, listening for metrics
 // collectors on addr.
 func (n *Node) startPrometheusServer(addr string) *http.Server {
+	println("hello startPrometheusServer!")
 	srv := &http.Server{
 		Addr: addr,
 		Handler: promhttp.InstrumentMetricHandler(
