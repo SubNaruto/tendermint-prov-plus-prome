@@ -1,68 +1,91 @@
-version: '3'
-
 services:
-  node0:
-    container_name: node0
-    image: "tendermint/localnode"
-    ports:
-      - "26656-26657:26656-26657"
-    environment:
-      - ID=0
-      - LOG=${LOG:-tendermint.log}
-    volumes:
-      - ./build:/tendermint:Z
-    networks:
-      localnet:
-        ipv4_address: 192.167.10.2
-
-  node1:
-    container_name: node1
-    image: "tendermint/localnode"
-    ports:
-      - "26659-26660:26656-26657"
-    environment:
-      - ID=1
-      - LOG=${LOG:-tendermint.log}
-    volumes:
-      - ./build:/tendermint:Z
-    networks:
-      localnet:
-        ipv4_address: 192.167.10.3
-
-  node2:
-    container_name: node2
-    image: "tendermint/localnode"
-    environment:
-      - ID=2
-      - LOG=${LOG:-tendermint.log}
-    ports:
-      - "26661-26662:26656-26657"
-    volumes:
-      - ./build:/tendermint:Z
-    networks:
-      localnet:
-        ipv4_address: 192.167.10.4
-
-  node3:
-    container_name: node3
-    image: "tendermint/localnode"
-    environment:
-      - ID=3
-      - LOG=${LOG:-tendermint.log}
-    ports:
-      - "26663-26664:26656-26657"
-    volumes:
-      - ./build:/tendermint:Z
-    networks:
-      localnet:
-        ipv4_address: 192.167.10.5
-
+    node1:
+        image: tmp_v2
+        container_name: node1
+        ports:
+            - "16657:26657"
+            - "16656:26656"
+            - "16660:26660"
+        volumes:
+            - $HOME/dockerfiles/node1:/root/.tendermint
+        user: root
+        networks:
+            dennis_mynet:
+                ipv4_address: 172.18.0.2
+        command:
+            - /usr/bin/bash
+            - -c
+            - |
+              ./tendermint init
+              chmod 777 -R /root/.tendermint
+              ./tendermint show-node-id > /root/.tendermint/nodeid.txt
+              tail -f /dev/null
+    node2:
+        image: tmp_v2
+        container_name: node2
+        ports:
+            - "26657:26657"
+            - "26656:26656"
+            - "26660:26660"
+        volumes:
+            - $HOME/dockerfiles/node2:/root/.tendermint
+        user: root
+        networks:
+            dennis_mynet:
+                ipv4_address: 172.18.0.3
+        command:
+            - /usr/bin/bash
+            - -c
+            - |
+              ./tendermint init
+              chmod 777 -R /root/.tendermint
+              ./tendermint show-node-id > /root/.tendermint/nodeid.txt
+              tail -f /dev/null
+    node3:
+        image: tmp_v2
+        container_name: node3
+        ports:
+            - "36657:26657"
+            - "36656:26656"
+            - "36660:26660"
+        volumes:
+            - $HOME/dockerfiles/node3:/root/.tendermint
+        user: root
+        networks:
+            dennis_mynet:
+                ipv4_address: 172.18.0.4
+        command:
+            - /usr/bin/bash
+            - -c
+            - |
+              ./tendermint init
+              chmod 777 -R /root/.tendermint
+              ./tendermint show-node-id > /root/.tendermint/nodeid.txt
+              tail -f /dev/null
+    node4:
+        image: tmp_v2
+        container_name: node4
+        ports:
+            - "46657:26657"
+            - "46656:26656"
+            - "46660:26660"
+        volumes:
+            - $HOME/dockerfiles/node4:/root/.tendermint
+        user: root
+        networks:
+            dennis_mynet:
+                ipv4_address: 172.18.0.5
+        command:
+            - /usr/bin/bash
+            - -c
+            - |
+              ./tendermint init
+              chmod 777 -R /root/.tendermint
+              ./tendermint show-node-id > /root/.tendermint/nodeid.txt
+              tail -f /dev/null
 networks:
-  localnet:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-      -
-        subnet: 192.167.10.0/16
-
+    dennis_mynet:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.18.0.0/16
