@@ -84,6 +84,7 @@ type ExitCoder interface {
 // execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func (e Executor) Execute() error {
+	println("hello world ! Execute")
 	e.SilenceUsage = true
 	e.SilenceErrors = true
 	err := e.Command.Execute()

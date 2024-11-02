@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	println("hello world ! tendermint start")
 	rootCmd := cmd.RootCmd
 	rootCmd.AddCommand(
 		cmd.GenValidatorCmd,

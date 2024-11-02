@@ -1748,6 +1748,7 @@ func (cs *State) pruneBlocks(retainHeight int64) (uint64, error) {
 }
 
 func (cs *State) recordMetrics(height int64, block *types.Block) {
+	println("hello recordMetrics")
 	cs.metrics.Validators.Set(float64(cs.Validators.Size()))
 	cs.metrics.ValidatorsPower.Set(float64(cs.Validators.TotalVotingPower()))
 
@@ -1830,9 +1831,14 @@ func (cs *State) recordMetrics(height int64, block *types.Block) {
 	}
 
 	cs.metrics.NumTxs.Set(float64(len(block.Data.Txs)))
+	//cs.metrics.NumTxs.Set(float64(100.00))
 	cs.metrics.TotalTxs.Add(float64(len(block.Data.Txs)))
 	cs.metrics.BlockSizeBytes.Set(float64(block.Size()))
 	cs.metrics.CommittedHeight.Set(float64(block.Height))
+	cs.metrics.AvgTps.Set(float64(0.0))
+	cs.metrics.PcdQrs.Set(float64(0.0))
+	cs.metrics.TotalQrs.Set(float64(0.0))
+	cs.metrics.AvgQps.Set(float64(0.0))
 }
 
 //-----------------------------------------------------------------------------

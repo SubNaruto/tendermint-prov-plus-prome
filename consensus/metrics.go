@@ -53,6 +53,15 @@ type Metrics struct {
 	TotalTxs metrics.Gauge
 	// The latest block height.
 	CommittedHeight metrics.Gauge
+	// The latest block's tps.
+	AvgTps metrics.Gauge
+	// Number of processed queries.
+	PcdQrs metrics.Gauge
+	// Total number of queries.
+	TotalQrs metrics.Gauge
+	// The latest second qps.
+	AvgQps metrics.Gauge
+
 	// Whether or not a node is fast syncing. 1 if yes, 0 if no.
 	FastSyncing metrics.Gauge
 	// Whether or not a node is state syncing. 1 if yes, 0 if no.
@@ -83,9 +92,12 @@ type Metrics struct {
 // "fooValue").
 func PrometheusMetrics(namespace string, labelsAndValues ...string) *Metrics {
 	labels := []string{}
+	println("啥玩意")
 	for i := 0; i < len(labelsAndValues); i += 2 {
 		labels = append(labels, labelsAndValues[i])
 	}
+	println("啥玩意")
+
 	return &Metrics{
 		Height: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
 			Namespace: namespace,
@@ -184,6 +196,30 @@ func PrometheusMetrics(namespace string, labelsAndValues ...string) *Metrics {
 			Name:      "latest_block_height",
 			Help:      "The latest block height.",
 		}, labels).With(labelsAndValues...),
+		AvgTps: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: MetricsSubsystem,
+			Name:      "latest_average_tps",
+			Help:      "The latest block's tps.",
+		}, labels).With(labelsAndValues...),
+		PcdQrs: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: MetricsSubsystem,
+			Name:      "num_qrs",
+			Help:      "Number of processed queries.",
+		}, labels).With(labelsAndValues...),
+		TotalQrs: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: MetricsSubsystem,
+			Name:      "total_qrs",
+			Help:      "Total number of queries.",
+		}, labels).With(labelsAndValues...),
+		AvgQps: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: MetricsSubsystem,
+			Name:      "latest_average_qps",
+			Help:      "The latest second qps.",
+		}, labels).With(labelsAndValues...),
 		FastSyncing: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
 			Namespace: namespace,
 			Subsystem: MetricsSubsystem,
@@ -243,6 +279,10 @@ func NopMetrics() *Metrics {
 		BlockSizeBytes:            discard.NewGauge(),
 		TotalTxs:                  discard.NewGauge(),
 		CommittedHeight:           discard.NewGauge(),
+		AvgTps:                    discard.NewGauge(),
+		PcdQrs:                    discard.NewGauge(),
+		TotalQrs:                  discard.NewGauge(),
+		AvgQps:                    discard.NewGauge(),
 		FastSyncing:               discard.NewGauge(),
 		StateSyncing:              discard.NewGauge(),
 		BlockParts:                discard.NewCounter(),

@@ -123,6 +123,7 @@ type MetricsProvider func(chainID string) (*cs.Metrics, *p2p.Metrics, *mempl.Met
 func DefaultMetricsProvider(config *cfg.InstrumentationConfig) MetricsProvider {
 	return func(chainID string) (*cs.Metrics, *p2p.Metrics, *mempl.Metrics, *sm.Metrics) {
 		if config.Prometheus {
+			println("helloworld")
 			return cs.PrometheusMetrics(config.Namespace, "chain_id", chainID),
 				p2p.PrometheusMetrics(config.Namespace, "chain_id", chainID),
 				mempl.PrometheusMetrics(config.Namespace, "chain_id", chainID),
