@@ -40,6 +40,10 @@ var (
 	errPubKeyIsNotSet = errors.New("pubkey is not set. Look for \"Can't get private validator pubkey\" errors")
 )
 
+// 全局变量，用于存储前一区块和当前区块的时间戳
+var previousBlockTime time.Time
+var currentBlockTime time.Time
+
 var msgQueueSize = 1000
 
 // msgs from the reactor which may update the state
@@ -1835,10 +1839,23 @@ func (cs *State) recordMetrics(height int64, block *types.Block) {
 	cs.metrics.TotalTxs.Add(float64(len(block.Data.Txs)))
 	cs.metrics.BlockSizeBytes.Set(float64(block.Size()))
 	cs.metrics.CommittedHeight.Set(float64(block.Height))
-	cs.metrics.AvgTps.Set(float64(0.0))
-	cs.metrics.PcdQrs.Set(float64(0.0))
-	cs.metrics.TotalQrs.Set(float64(0.0))
-	cs.metrics.AvgQps.Set(float64(0.0))
+	var avgtps float64 = 0.0
+	currentBlockTime = block.Header.Time
+
+	if previousBlockTime.IsZero() {
+		previousBlockTime = currentBlockTime
+		cs.metrics.AvgTps.Set(float64(0.0))
+	} else {
+		duration := currentBlockTime.Sub(previousBlockTime)
+		// 转换为浮动型秒数
+		timeSpentInSeconds := duration.Seconds()
+		avgtps = float64(len(block.Data.Txs)) / float64(timeSpentInSeconds)
+	}
+	previousBlockTime = currentBlockTime
+	cs.metrics.AvgTps.Set(avgtps)
+	//cs.metrics.PcdQrs.Set(float64(0.0))
+	//cs.metrics.TotalQrs.Set(float64(0.0))
+	//cs.metrics.AvgQps.Set(float64(0.0))
 }
 
 //-----------------------------------------------------------------------------

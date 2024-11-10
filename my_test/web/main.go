@@ -6,14 +6,41 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"github.com/gogo/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tendermint/tendermint/my_test/util"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	hp "github.com/tendermint/tendermint/rpc/client/http"
+	"sync"
 	"time"
 )
 
+// Prometheus Metrics
+var PcdQrs = prometheus.NewGauge(prometheus.GaugeOpts{
+	Namespace: "namespace",
+	Subsystem: "state",
+	Name:      "num_qrs",
+	Help:      "Number of processed queries.",
+})
+
+var TotalQrs = prometheus.NewGauge(prometheus.GaugeOpts{
+	Namespace: "namespace",
+	Subsystem: "state",
+	Name:      "total_qrs",
+	Help:      "Total number of queries.",
+})
+
+var AvgQps = prometheus.NewGauge(prometheus.GaugeOpts{
+	Namespace: "namespace",
+	Subsystem: "state",
+	Name:      "latest_average_qps",
+	Help:      "The latest second qps.",
+})
+
 var cli *hp.HTTP
 var r *redis.Client
+var mu sync.Mutex // Mutex to protect access to the counter
+var requestCount int
 
 func init() {
 	r = redis.NewClient(&redis.Options{
@@ -33,16 +60,52 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	// Register Prometheus metrics
+	prometheus.MustRegister(PcdQrs)
+	prometheus.MustRegister(TotalQrs)
+	prometheus.MustRegister(AvgQps)
 }
 
 func main() {
+	PcdQrs.Set(float64(0.0))
+	TotalQrs.Set(float64(0.0))
+	AvgQps.Set(float64(0.0))
+	// Initialize ticker for QPS calculation every second
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	// Start the QPS calculation in a goroutine
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				// Lock mutex to update QPS
+				mu.Lock()
+
+				// Calculate QPS based on the request count in the last second
+				qps := float64(requestCount)
+				AvgQps.Set(qps) // Set the latest QPS value
+
+				// Reset request count for the next second
+				requestCount = 0
+
+				// Unlock mutex
+				mu.Unlock()
+			}
+		}
+	}()
+
 	engine := gin.Default()
+	// Metrics endpoint for Prometheus scraping
+	engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	engine.GET("/prov", func(c *gin.Context) {
+		startTime := time.Now() // Start time for QPS calculation
 		entityId := c.Query("entityId")
 
 		provKey := util.GenProvKey(entityId)       // 溯源数据的key
 		provResKey := util.GenProvResKey(entityId) // 溯源结果的key
+		TotalQrs.Add(1)
 
 		provRes, err := r.Get(provResKey).Result()
 		if err != nil && err != redis.Nil {
@@ -53,6 +116,14 @@ func main() {
 			return
 		}
 		if provRes == "true" { // 溯源结果ok
+			//更新PcdQrs
+			PcdQrs.Add(1)
+
+			// Increment the request count for QPS calculation
+			mu.Lock()
+			requestCount++
+			mu.Unlock()
+
 			c.JSON(200, gin.H{
 				"code": 0,
 			})
@@ -118,13 +189,23 @@ func main() {
 		}
 
 		r.Set(provResKey, "true", time.Minute) // 验证正确则记入溯源结果
+		// Update PcdQrs as a processed query
+		PcdQrs.Add(1)
+		// Increment the request count for QPS calculation
+		mu.Lock()
+		requestCount++
+		mu.Unlock()
+		// Calculate QPS and update AvgQps
+		elapsed := time.Since(startTime).Seconds() // Calculate the time taken for the query
+		qps := 1 / elapsed                         // Calculate the QPS
+		AvgQps.Set(qps)                            // Set the latest QPS
 
 		c.JSON(200, gin.H{
 			"code": 0,
 		})
 	})
 
-	if err := engine.Run(":9090"); err != nil {
+	if err := engine.Run(":26661"); err != nil {
 		panic(err)
 	}
 }

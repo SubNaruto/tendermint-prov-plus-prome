@@ -17,6 +17,12 @@ const (
 type Metrics struct {
 	// Time between BeginBlock and EndBlock.
 	BlockProcessingTime metrics.Histogram
+	//// Number of processed queries.
+	//PcdQrs metrics.Gauge
+	//// Total number of queries.
+	//TotalQrs metrics.Gauge
+	//// The latest second qps.
+	//AvgQps metrics.Gauge
 }
 
 // PrometheusMetrics returns Metrics build using Prometheus client library.
@@ -35,6 +41,24 @@ func PrometheusMetrics(namespace string, labelsAndValues ...string) *Metrics {
 			Help:      "Time between BeginBlock and EndBlock in ms.",
 			Buckets:   stdprometheus.LinearBuckets(1, 10, 10),
 		}, labels).With(labelsAndValues...),
+		//PcdQrs: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+		//	Namespace: namespace,
+		//	Subsystem: MetricsSubsystem,
+		//	Name:      "num_qrs",
+		//	Help:      "Number of processed queries.",
+		//}, labels).With(labelsAndValues...),
+		//TotalQrs: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+		//	Namespace: namespace,
+		//	Subsystem: MetricsSubsystem,
+		//	Name:      "total_qrs",
+		//	Help:      "Total number of queries.",
+		//}, labels).With(labelsAndValues...),
+		//AvgQps: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+		//	Namespace: namespace,
+		//	Subsystem: MetricsSubsystem,
+		//	Name:      "latest_average_qps",
+		//	Help:      "The latest second qps.",
+		//}, labels).With(labelsAndValues...),
 	}
 }
 
@@ -42,5 +66,8 @@ func PrometheusMetrics(namespace string, labelsAndValues ...string) *Metrics {
 func NopMetrics() *Metrics {
 	return &Metrics{
 		BlockProcessingTime: discard.NewHistogram(),
+		//PcdQrs:              discard.NewGauge(),
+		//TotalQrs:            discard.NewGauge(),
+		//AvgQps:              discard.NewGauge(),
 	}
 }
